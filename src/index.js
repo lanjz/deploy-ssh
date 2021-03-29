@@ -14,9 +14,13 @@ if(!fs.existsSync(deployConfigPath)){
 }
 const deployConfig = require(deployConfigPath);
 let ENV = process.argv[2]
+if(!ENV){
+  err(`未指定运行环境`)
+  return
+}
 const config = deployConfig&&deployConfig[ENV] ? deployConfig[ENV] : null
 if(!config){
-  err(`需要完善配置信息`)
+  err(`需要完善${ENV}配置信息`)
   return
 }
 const srcPath = path.resolve(cwd, config.distPath); // 要上传的文件
@@ -24,14 +28,17 @@ if(!fs.existsSync(srcPath)){
   err(`不存在${config.distPath}目录`)
   return
 }
-const targetPath = config.unzipDirName||config.distPath
+const targetPath = config.uploadDirName||config.distPath
 const localZipPath = path.resolve(cwd, `${targetPath}.zip`); // 压缩名件名
 let remotePublishZipPath = config.publishPath + `/${targetPath}.zip`
 let remotePublishPath =  config.publishPath + `/${targetPath}`
+
+let sshRmCode = (config.insteadCommand||{}).rm|| 'rm'
+
 async function doExec(){
   try {
     await connectSSH() // 连接 ssh
-    await runExec(config.exec) // 连接 ssh
+    await runExec(config.onlyExec) // 连接 ssh
   }catch (err){
     err(err)
   }finally {
@@ -48,6 +55,9 @@ async function doJob() {
     await unzipRemoteFile() // 解压文件
     if(config.isRemoveRemoteZip){
       await removeRemoteZip() // 移除上传的压缩包
+    }
+    if(config.afterDoneExec){
+      await runExec(config.afterDoneExec) // 最后要在服务器执行shell
     }
     if(config.isRemoveLocalZip){
       await removeLocalZip() // 移除本地的压缩包
@@ -128,8 +138,7 @@ function unzipRemoteFile(){
 }
 function removeRemoteFile(){
   log('删除远程文件：'+remotePublishPath)
-  // 货拉拉需要使用 /bin/rm 删除文件
-  return ssh.execCommand(`/bin/rm -rf ${remotePublishPath}`)
+  return ssh.execCommand(`${sshRmCode} -rf ${remotePublishPath}`)
     .then(() => {
       log('删除远程文件成功')
     })
@@ -140,8 +149,7 @@ function removeRemoteFile(){
 }
 function removeRemoteZip(){
   log('删除远程压缩文件：'+remotePublishZipPath)
-  // 货拉拉需要使用 /bin/rm 删除文件
-  return ssh.execCommand(`/bin/rm -rf ${remotePublishZipPath}`)
+  return ssh.execCommand(`${sshRmCode} -rf ${remotePublishZipPath}`)
     .then(() => {
       log('删除远程压缩文件成功')
     })
@@ -168,7 +176,7 @@ function runExec(code){
       throw err
     })
 }
-if(config.exec){
+if(config.onlyExec){
   doExec(); // 连接ssh 直接执行命令的
 } else {
   doJob();
