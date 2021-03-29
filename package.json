@@ -1,8 +1,8 @@
 {
   "name": "deploy-ssh",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "前端一键自动化部署脚手架服务",
-  "homepage": "git@github.com:lanjz/deploy-ssh",
+  "homepage": "https://github.com/lanjz/deploy-ssh",
   "author": {
     "name": "lanjz"
   },
