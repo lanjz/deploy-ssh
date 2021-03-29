@@ -4,7 +4,7 @@
 
 ## 安装
 
-`npm install deploy-ssh`
+`npm install deploy-ssh -g`
 
 ## 使用方式
 
