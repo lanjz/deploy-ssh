@@ -42,6 +42,7 @@ async function doExec(){
   }catch (err){
     err(err)
   }finally {
+    closeSSH()
     process.exit(0);
   }
 }
@@ -65,6 +66,7 @@ async function doJob() {
   }catch (err){
     err(err)
   }finally {
+    closeSSH()
     process.exit(0);
   }
 }
@@ -112,6 +114,11 @@ function connectSSH(){
     err('ssh连接失败:',err);
     throw err
   });
+}
+function closeSSH(){
+  if(ssh){
+    ssh.dispose()
+  }
 }
 // 上传文件
 function uploadFile(){
