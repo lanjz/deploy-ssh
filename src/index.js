@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const path = require('path');
 const archiver =require('archiver');
 const fs = require('fs');
